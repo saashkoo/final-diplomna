@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "Camera/CameraComponent.h"
 #include "WheeledVehiclePawn.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "ChaosWheeledVehicleMovementComponent.h"
 
 #include "MyWheeledVehiclePawn.generated.h"
@@ -27,12 +28,21 @@ public:
     UPROPERTY(EditAnywhere)
     UCameraComponent* OurCameraComponent;
 
+    UPROPERTY(EditAnywhere)
+    USpringArmComponent* SpringArmComp;
+
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
     UPROPERTY(EditAnywhere)
     int camera_cycle;
+
+    UPROPERTY(EditAnywhere)
+    int max_cameras = 2;
+
+    UPROPERTY(EditAnywhere)
+    float spawn_offset = 500.0f;
 
     UPROPERTY(EditAnywhere)
     FVector ResetLocation;

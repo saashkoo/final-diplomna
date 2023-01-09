@@ -12,10 +12,12 @@ void AMyGameModeBase::StartPlay() {
     UWorld* World = GetWorld();
     UGameplayStatics::CreatePlayer(World, 0, true);
     APlayerController* Controller1 = UGameplayStatics::GetPlayerController(World, 0);
-    AMyWheeledVehiclePawn* Player1 = World->SpawnActor<AMyWheeledVehiclePawn>(PawnSpawnClass, FVector(-24778.322974f, 6622.661215f, 19320.184375f), FRotator(0, 0, 0));
+    AActor* Player1Start = FindPlayerStart(Controller1, "P1");
+    AMyWheeledVehiclePawn* Player1 = World->SpawnActor<AMyWheeledVehiclePawn>(PawnSpawnClass, Player1Start->GetActorLocation(), Player1Start->GetActorRotation());
     UGameplayStatics::CreatePlayer(World, 1, true);
     APlayerController* Controller2 = UGameplayStatics::GetPlayerController(World, 1);
-    AMyWheeledVehiclePawn* Player2 = World->SpawnActor<AMyWheeledVehiclePawn>(PawnSpawnClass, FVector(-24778.322974f, 6900.661215f, 19320.184375f), FRotator(0, 0, 0));
+    AActor* Player2Start = FindPlayerStart(Controller2, "P2");
+    AMyWheeledVehiclePawn* Player2 = World->SpawnActor<AMyWheeledVehiclePawn>(PawnSpawnClass, Player2Start->GetActorLocation(), Player2Start->GetActorRotation());
 
     Controller1->Possess(Player1);
     Controller2->Possess(Player2);

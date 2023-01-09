@@ -9,14 +9,15 @@ AMyWheeledVehiclePawn::AMyWheeledVehiclePawn()
     camera_cycle = 0;
     ResetLocation = FVector(0.0f, 0.0f, 0.0f);
     ResetRotation = FRotator(0.0f, 0.0f, 0.0f);
-    GetVehicleMovementComponent()->SetUseAutomaticGears(true);//ne pravi nishto
+    GetVehicleMovementComponent()->SetUseAutomaticGears(true);
     
     PrimaryActorTick.bCanEverTick = true;
-
+    SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+    SpringArmComp->SetupAttachment(RootComponent);
+    SpringArmComp->TargetArmLength = 500.0f;
     OurCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
-    OurCameraComponent->SetupAttachment(RootComponent);
-    OurCameraComponent->SetRelativeLocation(FVector(-450.0f, 0.0f, 350.0f));
-    OurCameraComponent->SetRelativeRotation(FRotator(-15.0f, 0.0f, 0.0f));
+    OurCameraComponent->AttachToComponent(SpringArmComp, FAttachmentTransformRules::KeepRelativeTransform);
+
 
 }
 
@@ -55,7 +56,7 @@ void AMyWheeledVehiclePawn::ChangeCam()
     UE_LOG(LogTemp, Error, TEXT("usesautogear: %d"), GetVehicleMovementComponent()->GetUseAutoGears());
 
     if (camera_cycle == 0) {
-        OurCameraComponent->SetRelativeLocation(FVector(200.0f, 0.0f, 200.0f));
+        OurCameraComponent->SetRelativeLocation(FVector(200.0f, 0.0f, 100.0f));
         OurCameraComponent->SetRelativeRotation(FRotator(0.0f, 0.0f, 0.0f));
     }
     if (camera_cycle == 1) {
@@ -64,7 +65,7 @@ void AMyWheeledVehiclePawn::ChangeCam()
     }
     camera_cycle = camera_cycle + 1;
 
-    if (camera_cycle == 2) {
+    if (camera_cycle == max_cameras) {
         camera_cycle = 0;
     }
 }
@@ -76,12 +77,12 @@ int AMyWheeledVehiclePawn::GetCamCycle()
 
 void AMyWheeledVehiclePawn::SetCamCycle(int cycle)
 {
-    while (cycle > 2) {
-        cycle = cycle - 2;
+    while (cycle > max_cameras) {
+        cycle = cycle - max_cameras;
     }
 
     while (cycle < 0) {
-        cycle = cycle + 2;
+        cycle = cycle + max_cameras;
     }
     camera_cycle = cycle;
 }
@@ -110,7 +111,7 @@ void AMyWheeledVehiclePawn::Reset()
     }
 
     //attempts to find a new spawn
-    ResetLocation.Y = ResetLocation.Y + 500;
+    ResetLocation.Y = ResetLocation.Y + spawn_offset;
     ResetLocation = ResetLocation + Offset;
     bTeleportSucceeded = MyWorld->FindTeleportSpot(this, ResetLocation, ResetRotation);
     ResetLocation = ResetLocation - Offset;
@@ -119,8 +120,13 @@ void AMyWheeledVehiclePawn::Reset()
         this->GetMovementComponent()->Deactivate();
         this->TeleportTo(ResetLocation, ResetRotation);
         this->GetMovementComponent()->Activate();
-        ResetLocation.Y = ResetLocation.Y - 500;
+        ResetLocation.Y = ResetLocation.Y - spawn_offset;
         UE_LOG(LogTemp, Error, TEXT("end2 y = %f"), ResetLocation.Y);
         return;
     }
+    else 
+    {
+        ResetLocation.Y = ResetLocation.Y - spawn_offset;
+    }
+
 }
