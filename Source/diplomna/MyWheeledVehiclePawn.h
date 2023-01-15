@@ -36,6 +36,12 @@ protected:
     virtual void BeginPlay() override;
 
     UPROPERTY(EditAnywhere)
+    unsigned int MaxLaps;
+
+    UPROPERTY(EditAnywhere)
+    unsigned int CurrentLap;
+
+    UPROPERTY(EditAnywhere)
     int camera_cycle;
 
     UPROPERTY(EditAnywhere)
@@ -50,16 +56,63 @@ protected:
     UPROPERTY(EditAnywhere)
     FRotator ResetRotation;
 
+    UPROPERTY(EditAnywhere)
+    AActor* ResetCheckpoint;
+
+    UPROPERTY(EditAnywhere)
+    AActor* WrongDirectionCheckpoint;
+
 public:
     // Called every frame
     virtual void Tick(float DeltaSeconds) override;
     
+    UFUNCTION()
     void Accelerate(float AxisValue);
+
+    UFUNCTION()
     void Steer(float AxisValue);
+    
+    UFUNCTION()
     void ChangeCam();
+    
+    UFUNCTION()
     int GetCamCycle();
+    
+    UFUNCTION()
     void SetCamCycle(int cycle);
+    
+    UFUNCTION()
     void SetResetLocation(FVector NewLocation, FRotator NewRotation);
+    
+    UFUNCTION()
     void Reset();
- 
+
+    UFUNCTION()
+    AActor* GetResetCheckpoint();
+
+    UFUNCTION()
+    AActor* GetWrongDirectionCheckpoint();
+
+    UFUNCTION()
+    void SetResetCheckpoint(AActor * NewCheckpoint);
+
+    UFUNCTION()
+    void SetWrongDirectionCheckpoint(AActor* NewCheckpoint);
+
+    UFUNCTION()
+    void SetMaxLaps(unsigned int LapCount);
+
+    UFUNCTION()
+    void SetCurrentLap(unsigned int LapCount);
+
+    UFUNCTION()
+    void CompleteLap();
+
+    UFUNCTION()
+    unsigned int GetMaxLaps();
+
+    UFUNCTION()
+    unsigned int GetCurrentLap();
+
+
 };

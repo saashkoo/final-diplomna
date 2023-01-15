@@ -6,6 +6,10 @@
 
 AMyWheeledVehiclePawn::AMyWheeledVehiclePawn() 
 {
+    MaxLaps = 0;
+    CurrentLap = 1;
+    ResetCheckpoint = nullptr;
+    WrongDirectionCheckpoint = nullptr;
     camera_cycle = 0;
     ResetLocation = FVector(0.0f, 0.0f, 0.0f);
     ResetRotation = FRotator(0.0f, 0.0f, 0.0f);
@@ -14,7 +18,7 @@ AMyWheeledVehiclePawn::AMyWheeledVehiclePawn()
     PrimaryActorTick.bCanEverTick = true;
     SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
     SpringArmComp->SetupAttachment(RootComponent);
-    SpringArmComp->TargetArmLength = 500.0f;
+    SpringArmComp->TargetArmLength = 300.0f;
     OurCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
     OurCameraComponent->AttachToComponent(SpringArmComp, FAttachmentTransformRules::KeepRelativeTransform);
 
@@ -26,6 +30,7 @@ void AMyWheeledVehiclePawn::BeginPlay()
     Super::BeginPlay();
     ResetLocation = GetActorLocation();
 }
+
 
 void AMyWheeledVehiclePawn::Tick(float DeltaSeconds)
 {
@@ -129,4 +134,74 @@ void AMyWheeledVehiclePawn::Reset()
         ResetLocation.Y = ResetLocation.Y - spawn_offset;
     }
 
+}
+
+AActor* AMyWheeledVehiclePawn::GetResetCheckpoint()
+{
+    return ResetCheckpoint;
+}
+
+AActor* AMyWheeledVehiclePawn::GetWrongDirectionCheckpoint()
+{
+    return WrongDirectionCheckpoint;
+}
+
+void AMyWheeledVehiclePawn::SetResetCheckpoint(AActor* NewCheckpoint)
+{
+    if (NewCheckpoint != nullptr)
+    {
+        if (ResetCheckpoint != nullptr) //if player has passed a checkpoint
+        {
+            WrongDirectionCheckpoint = ResetCheckpoint;
+        }
+        ResetCheckpoint = NewCheckpoint;
+        ResetLocation = ResetCheckpoint->GetActorLocation();
+        ResetRotation = ResetCheckpoint->GetActorRotation();
+    }
+    
+}
+
+void AMyWheeledVehiclePawn::SetWrongDirectionCheckpoint(AActor* NewCheckpoint)
+{
+    if (WrongDirectionCheckpoint == nullptr) {
+        UE_LOG(LogTemp, Error, TEXT("ok ,for now"));
+    }
+    if (NewCheckpoint != nullptr)
+    {
+        WrongDirectionCheckpoint = NewCheckpoint;
+    }
+    if (WrongDirectionCheckpoint == nullptr) {
+        UE_LOG(LogTemp, Error, TEXT("oof"));
+    }
+
+
+}
+
+void AMyWheeledVehiclePawn::SetMaxLaps(unsigned int LapCount)
+{
+    MaxLaps = LapCount;
+}
+
+void AMyWheeledVehiclePawn::SetCurrentLap(unsigned int LapCount)
+{
+    CurrentLap = LapCount;
+}
+
+void AMyWheeledVehiclePawn::CompleteLap()
+{
+    if (CurrentLap == MaxLaps) 
+    {
+        UE_LOG(LogTemp, Error, TEXT("Finished race"));
+    }
+    CurrentLap++;
+}
+
+unsigned int AMyWheeledVehiclePawn::GetMaxLaps()
+{
+    return MaxLaps;
+}
+
+unsigned int AMyWheeledVehiclePawn::GetCurrentLap()
+{
+    return CurrentLap;
 }

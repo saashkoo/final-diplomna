@@ -34,8 +34,18 @@ void ACheckpoint::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, clas
 {
 	if ((OtherComp != NULL) && ((OtherActor->GetActorNameOrLabel() == "BP_CAR_MyWheeledVehiclePawn")|| (OtherActor->GetActorNameOrLabel() == "BP_CAR_MyWheeledVehiclePawn1")))
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s passed a checkpoint"), *(OtherActor->GetActorNameOrLabel()));
-		AMyWheeledVehiclePawn* Player = Cast<AMyWheeledVehiclePawn>(OtherActor);
-		Player->SetResetLocation(this->GetActorLocation(), this->GetActorRotation());
+		AMyWheeledVehiclePawn* Player = CastChecked<AMyWheeledVehiclePawn>(OtherActor);
+		if (Player->GetWrongDirectionCheckpoint() == this) 
+		{
+			UE_LOG(LogTemp, Error, TEXT("sad"));
+			Player->Reset();
+			return;
+		}
+		if (Player->GetResetCheckpoint() != this)
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s passed a checkpoint"), *(OtherActor->GetActorNameOrLabel()));
+			Player->SetResetCheckpoint(this);
+		}
+		
 	}
 }
