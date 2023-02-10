@@ -8,6 +8,11 @@
 #include "WheeledVehiclePawn.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "ChaosWheeledVehicleMovementComponent.h"
+#include "CustomVehicleMovementComponent.h"
+#include "PowerupsEnum.h"
+#include "Projectile.h"
+#include "SinglePowerupDrop.h"
+#include "Containers/Array.h"
 
 #include "MyWheeledVehiclePawn.generated.h"
 
@@ -23,7 +28,7 @@ class DIPLOMNA_API AMyWheeledVehiclePawn : public AWheeledVehiclePawn
 	
 public:
     // Sets default values
-    AMyWheeledVehiclePawn();
+    AMyWheeledVehiclePawn(const FObjectInitializer& ObjectInitializer);
 
     UPROPERTY(EditAnywhere)
     UCameraComponent* OurCameraComponent;
@@ -31,10 +36,19 @@ public:
     UPROPERTY(EditAnywhere)
     USpringArmComponent* SpringArmComp;
 
+    UPROPERTY(EditAnywhere)
+    TSubclassOf<AProjectile> ProjectileClass;
+
+    UPROPERTY(EditAnywhere)
+    TArray<TSubclassOf<ASinglePowerupDrop>> PowerupDrops;
+
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
+    UPROPERTY()
+    UCustomVehicleMovementComponent* NewVehicleMovementComponent;
+    
     UPROPERTY(EditAnywhere)
     unsigned int MaxLaps;
 
@@ -61,6 +75,24 @@ protected:
 
     UPROPERTY(EditAnywhere)
     AActor* WrongDirectionCheckpoint;
+
+    UPROPERTY(EditAnywhere)
+    PowerupsEnum Powerups[3];
+
+    UPROPERTY(EditAnywhere)
+    int Hp = 3;
+
+    UPROPERTY(EditAnywhere)
+    int MaxHp = 3;
+
+    UPROPERTY(EditAnywhere)
+    int Shield = 0;
+
+    UPROPERTY(EditAnywhere)
+    int PowerupSlot = 0;
+
+    UPROPERTY(EditAnywhere)
+    int MaxPowerupSlots = 3;
 
 public:
     // Called every frame
@@ -114,5 +146,56 @@ public:
     UFUNCTION()
     unsigned int GetCurrentLap();
 
+    UFUNCTION()
+    void SetPowerup(PowerupsEnum Value, int Slot);
+
+    UFUNCTION()
+    PowerupsEnum GetPowerup(int Slot);
+
+    UFUNCTION()
+    int GetHp();
+
+    UFUNCTION()
+    void SetHp(int Value);
+
+    UFUNCTION()
+    void UseSelectedPowerup();
+
+    UFUNCTION()
+    int GetPowerupSlot();
+
+    UFUNCTION()
+    void SetPowerupSlot(int Value);
+
+    UFUNCTION()
+    int GetShield();
+
+    UFUNCTION()
+    void SetShield(int Value);
+
+    UFUNCTION()
+    int GetMaxPowerupSlots();
+
+    UFUNCTION()
+    void NextPowerupSlot();
+
+    UFUNCTION()
+    void OnOverlap(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+    UFUNCTION()
+    void DropPowerup();
+
+public://to be changed
+    UFUNCTION()
+    void UseShield();
+
+    UFUNCTION()
+    void UseProjectile();
+
+    UFUNCTION()
+    void UseHeal();
+
+    UFUNCTION()
+    void UseBoost();
 
 };
