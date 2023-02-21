@@ -9,10 +9,14 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "ChaosWheeledVehicleMovementComponent.h"
 #include "CustomVehicleMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/GameMode.h"
+#include "FastestTimeSaveGame.h"
 #include "PowerupsEnum.h"
 #include "Projectile.h"
 #include "SinglePowerupDrop.h"
 #include "Containers/Array.h"
+#include "GameFramework/GameModeBase.h"
 
 #include "MyWheeledVehiclePawn.generated.h"
 
@@ -93,6 +97,12 @@ protected:
 
     UPROPERTY(EditAnywhere)
     int MaxPowerupSlots = 3;
+
+    UPROPERTY(VisibleAnywhere)
+    float LapStartTime;
+
+    UPROPERTY(VisibleAnywhere)
+    float FastestLap = -1;
 
 public:
     // Called every frame
@@ -184,6 +194,15 @@ public:
 
     UFUNCTION()
     void DropPowerup();
+
+    UFUNCTION()
+    float GetLapStartTime();
+
+    UFUNCTION()
+    void SetLapStartTime(float Time);
+
+    UFUNCTION()
+    void LoadGameDelegateFunction(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData);
 
 public://to be changed
     UFUNCTION()

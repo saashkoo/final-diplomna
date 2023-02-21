@@ -26,10 +26,18 @@ AMyWheeledVehiclePawn::AMyWheeledVehiclePawn(const FObjectInitializer& ObjectIni
     OurCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
     OurCameraComponent->AttachToComponent(SpringArmComp, FAttachmentTransformRules::KeepRelativeTransform);
 
-    
+
     
 
+}
 
+void AMyWheeledVehiclePawn::LoadGameDelegateFunction(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData)
+{
+    UFastestTimeSaveGame* LoadedGame = CastChecked<UFastestTimeSaveGame>(LoadedGameData);
+    {
+        for (auto Result : LoadedGame->Times)
+            UE_LOG(LogTemp, Error, TEXT("fastest time: %f, done by %s"), Result.Key, Result.Value.GetCharArray().GetData());
+    }
 }
 
 void AMyWheeledVehiclePawn::BeginPlay()
@@ -37,6 +45,7 @@ void AMyWheeledVehiclePawn::BeginPlay()
     Super::BeginPlay();
     ResetLocation = GetActorLocation();
     this->GetMesh()->OnComponentBeginOverlap.AddDynamic(this, &AMyWheeledVehiclePawn::OnOverlap);
+    this->SetLapStartTime(this->GetGameTimeSinceCreation());
 }
 
 
@@ -205,9 +214,35 @@ void AMyWheeledVehiclePawn::SetCurrentLap(unsigned int LapCount)
 
 void AMyWheeledVehiclePawn::CompleteLap()
 {
+    float seconds = this->GetGameTimeSinceCreation() - this->GetLapStartTime();
+    int minutes = 0;
+    if (FastestLap == -1)
+    {
+        FastestLap = seconds;
+    }
+    if (seconds < FastestLap)
+    {
+        FastestLap = seconds;
+    }
+    while (seconds > 60.f) 
+    {
+        minutes = minutes + 1;
+        seconds = seconds - 60.f;
+    }
+     UE_LOG(LogTemp, Warning, TEXT("LapTime: %2d.%2.2f"), minutes, seconds);
+     SetLapStartTime(this->GetGameTimeSinceCreation());
+    
     if (CurrentLap == MaxLaps) 
     {
         UE_LOG(LogTemp, Error, TEXT("Finished race"));
+        if (UFastestTimeSaveGame* SaveGameInstance = Cast<UFastestTimeSaveGame>(UGameplayStatics::CreateSaveGameObject(UFastestTimeSaveGame::StaticClass())))
+        {
+            SaveGameInstance->Times.Add(FastestLap, FString("player 1"));
+            if (UGameplayStatics::SaveGameToSlot(SaveGameInstance, "defalut", 0))
+            {
+            }
+        }
+        CastChecked<AGameMode>(GetWorld()->GetAuthGameMode())->EndMatch();
     }
     CurrentLap++;
 }
@@ -377,6 +412,16 @@ void AMyWheeledVehiclePawn::NextPowerupSlot()
 void AMyWheeledVehiclePawn::UseBoost()
 {
     this->GetMesh()->AddImpulse(this->GetActorRotation().RotateVector(FVector(1000, 0, 0)), "None", true);
+}
+
+float AMyWheeledVehiclePawn::GetLapStartTime()
+{
+    return this->LapStartTime;
+}
+
+void AMyWheeledVehiclePawn::SetLapStartTime(float Time)
+{
+    this->LapStartTime = Time;
 }
 
 int AMyWheeledVehiclePawn::GetMaxPowerupSlots()
