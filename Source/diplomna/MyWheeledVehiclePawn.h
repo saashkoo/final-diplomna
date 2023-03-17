@@ -41,6 +41,9 @@ public:
     USpringArmComponent* SpringArmComp;
 
     UPROPERTY(EditAnywhere)
+    class UBoxComponent* BoxComp;
+
+    UPROPERTY(EditAnywhere)
     TSubclassOf<AProjectile> ProjectileClass;
 
     UPROPERTY(EditAnywhere)

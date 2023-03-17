@@ -12,15 +12,16 @@ APowerupSpawner::APowerupSpawner()
 	BoxComp->BodyInstance.SetCollisionProfileName("OverlapAll");
 	BoxComp->OnComponentBeginOverlap.AddDynamic(this, &APowerupSpawner::OnOverlapBegin);
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	Mesh->BodyInstance.SetCollisionProfileName("OverlapAll");
+	Mesh->BodyInstance.SetCollisionProfileName("NoCollision");
 	RootComponent = BoxComp;
-	Mesh->AttachToComponent(BoxComp, FAttachmentTransformRules::KeepRelativeTransform);
+	Mesh->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
 void APowerupSpawner::BeginPlay()
 {
 	Super::BeginPlay();
+	
 	
 }
 
@@ -33,8 +34,9 @@ void APowerupSpawner::Tick(float DeltaTime)
 
 void APowerupSpawner::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+
 	if (bCanBeCollected) {
-		if ((OtherComp != NULL) && ((OtherActor->GetActorNameOrLabel() == "BP_CAR_MyWheeledVehiclePawn") || (OtherActor->GetActorNameOrLabel() == "BP_CAR_MyWheeledVehiclePawn1")))
+		if ((OtherComp != NULL) && OtherActor->ActorHasTag(FName("Player")))
 		{
 			AMyWheeledVehiclePawn* Player = CastChecked<AMyWheeledVehiclePawn>(OtherActor);
 			for (int i = 0; i < Player->GetMaxPowerupSlots(); i++)

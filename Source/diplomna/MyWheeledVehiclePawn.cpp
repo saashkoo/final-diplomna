@@ -2,11 +2,17 @@
 
 
 #include "MyWheeledVehiclePawn.h"
-
+#include "Components/BoxComponent.h"
 
 AMyWheeledVehiclePawn::AMyWheeledVehiclePawn(const FObjectInitializer& ObjectInitializer)
     :Super(ObjectInitializer.SetDefaultSubobjectClass<UCustomVehicleMovementComponent>(VehicleMovementComponentName))
 {
+    RootComponent = GetMesh();
+    BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("VehicleOverlapBox"));
+    BoxComp->BodyInstance.SetCollisionProfileName("OverlapAllDynamic");
+    BoxComp->OnComponentBeginOverlap.AddDynamic(this, &AMyWheeledVehiclePawn::OnOverlap);
+    BoxComp->SetupAttachment(RootComponent);
+    bGenerateOverlapEventsDuringLevelStreaming = true;
     Powerups[0] = PowerupsEnum::NONE;
     Powerups[1] = PowerupsEnum::NONE;
     Powerups[2] = PowerupsEnum::NONE;
@@ -24,7 +30,8 @@ AMyWheeledVehiclePawn::AMyWheeledVehiclePawn(const FObjectInitializer& ObjectIni
     SpringArmComp->SetupAttachment(RootComponent);
     SpringArmComp->TargetArmLength = 300.0f;
     OurCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("OurCamera"));
-    OurCameraComponent->AttachToComponent(SpringArmComp, FAttachmentTransformRules::KeepRelativeTransform);
+    OurCameraComponent->SetupAttachment(SpringArmComp);
+   
 
 
     
@@ -33,18 +40,19 @@ AMyWheeledVehiclePawn::AMyWheeledVehiclePawn(const FObjectInitializer& ObjectIni
 
 void AMyWheeledVehiclePawn::LoadGameDelegateFunction(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData)
 {
-    UFastestTimeSaveGame* LoadedGame = CastChecked<UFastestTimeSaveGame>(LoadedGameData);
-    {
-        for (auto Result : LoadedGame->Times)
-            UE_LOG(LogTemp, Error, TEXT("fastest time: %f, done by %s"), Result.Key, Result.Value.GetCharArray().GetData());
+    if (LoadedGameData != nullptr) {
+        UFastestTimeSaveGame* LoadedGame = CastChecked<UFastestTimeSaveGame>(LoadedGameData);
+        {
+            for (auto Result : LoadedGame->Times)
+                UE_LOG(LogTemp, Error, TEXT("fastest time: %f, done by %s"), Result.Key, Result.Value.GetCharArray().GetData());
+        }
     }
-}
+ }
 
 void AMyWheeledVehiclePawn::BeginPlay()
 {
     Super::BeginPlay();
     ResetLocation = GetActorLocation();
-    this->GetMesh()->OnComponentBeginOverlap.AddDynamic(this, &AMyWheeledVehiclePawn::OnOverlap);
     this->SetLapStartTime(this->GetGameTimeSinceCreation());
 }
 
@@ -235,11 +243,18 @@ void AMyWheeledVehiclePawn::CompleteLap()
     if (CurrentLap == MaxLaps) 
     {
         UE_LOG(LogTemp, Error, TEXT("Finished race"));
-        if (UFastestTimeSaveGame* SaveGameInstance = Cast<UFastestTimeSaveGame>(UGameplayStatics::CreateSaveGameObject(UFastestTimeSaveGame::StaticClass())))
+        if (UFastestTimeSaveGame* LoadedGame = Cast<UFastestTimeSaveGame>(UGameplayStatics::LoadGameFromSlot("defalut", 0)))
         {
-            SaveGameInstance->Times.Add(FastestLap, FString("player 1"));
+            LoadedGame->Times.Add(FastestLap, this->GetActorNameOrLabel());
+            LoadedGame->Times.KeySort([](float A, float B) { return A < B; });
+        }
+        else if(UFastestTimeSaveGame* SaveGameInstance = Cast<UFastestTimeSaveGame>(UGameplayStatics::CreateSaveGameObject(UFastestTimeSaveGame::StaticClass())))
+        {
+            SaveGameInstance->Times.Add(FastestLap, GetActorNameOrLabel());
+            SaveGameInstance->Times.KeySort([](float A, float B) { return A < B; });
             if (UGameplayStatics::SaveGameToSlot(SaveGameInstance, "defalut", 0))
             {
+                
             }
         }
         CastChecked<AGameMode>(GetWorld()->GetAuthGameMode())->EndMatch();

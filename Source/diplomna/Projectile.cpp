@@ -16,7 +16,7 @@ AProjectile::AProjectile()
 	BoxComp->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnOverlapBegin);
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	RootComponent = BoxComp;
-	Mesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	Mesh->SetupAttachment(RootComponent);
 	MovementComponent->ProjectileGravityScale = 0.f;
 	MovementComponent->Velocity = this->GetActorRotation().RotateVector(FVector(1, 0, 0));
 }

@@ -9,7 +9,7 @@ ACheckpoint::ACheckpoint()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
-	BoxComp->BodyInstance.SetCollisionProfileName("Trigger");
+	BoxComp->BodyInstance.SetCollisionProfileName("OverlapAll");
 	BoxComp->OnComponentBeginOverlap.AddDynamic(this, &ACheckpoint::OnOverlapBegin);
 
 	RootComponent = BoxComp;
@@ -32,7 +32,7 @@ void ACheckpoint::Tick(float DeltaTime)
 
 void ACheckpoint::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if ((OtherComp != NULL) && ((OtherActor->GetActorNameOrLabel() == "BP_CAR_MyWheeledVehiclePawn")|| (OtherActor->GetActorNameOrLabel() == "BP_CAR_MyWheeledVehiclePawn1")))
+	if ((OtherComp != NULL) && (OtherActor->ActorHasTag(FName("Player"))))
 	{
 		AMyWheeledVehiclePawn* Player = CastChecked<AMyWheeledVehiclePawn>(OtherActor);
 		if (Player->GetWrongDirectionCheckpoint() == this) 

@@ -7,7 +7,7 @@ AFinalCheckpoint::AFinalCheckpoint()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("FinalBoxComp"));
-	BoxComp->BodyInstance.SetCollisionProfileName("FinalTrigger");
+	BoxComp->BodyInstance.SetCollisionProfileName("OverlapAll");
 	BoxComp->OnComponentBeginOverlap.AddDynamic(this, &AFinalCheckpoint::OnOverlapBegin);
 
 	RootComponent = BoxComp;
@@ -24,7 +24,7 @@ void AFinalCheckpoint::BeginPlay()
 void AFinalCheckpoint::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
-	if ((OtherComp != NULL) && ((OtherActor->GetActorNameOrLabel() == "BP_CAR_MyWheeledVehiclePawn") || (OtherActor->GetActorNameOrLabel() == "BP_CAR_MyWheeledVehiclePawn1")))
+	if ((OtherComp != NULL) && OtherActor->ActorHasTag(FName("Player")))
 	{
 		AMyWheeledVehiclePawn* Player = CastChecked<AMyWheeledVehiclePawn>(OtherActor);
 		if (Player->GetWrongDirectionCheckpoint() == this)
