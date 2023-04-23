@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "MyWheeledVehiclePawn.h"
+#include "PlayerHUD.h"
 
 #include "CarPlayerControler.generated.h"
 

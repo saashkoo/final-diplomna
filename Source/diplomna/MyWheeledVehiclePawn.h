@@ -25,6 +25,11 @@
 /**
  * 
  */
+
+DECLARE_DELEGATE_OneParam(IntDelegate, int);
+DECLARE_DELEGATE_OneParam(FStringDelegate, FString);
+DECLARE_DELEGATE_TwoParams(IntIntDelegate, int, int);
+
 UCLASS()
 class DIPLOMNA_API AMyWheeledVehiclePawn : public AWheeledVehiclePawn
 {
@@ -33,6 +38,18 @@ class DIPLOMNA_API AMyWheeledVehiclePawn : public AWheeledVehiclePawn
 public:
     // Sets default values
     AMyWheeledVehiclePawn(const FObjectInitializer& ObjectInitializer);
+
+    IntDelegate SpeedDelegate;
+
+    IntDelegate SelectedPowerupDelegate;
+
+    FStringDelegate LapTimeDelegate;
+
+    IntIntDelegate HpDelegate;
+
+    IntIntDelegate PowerupDelegate;
+
+    IntIntDelegate LapDelegate;
 
     UPROPERTY(EditAnywhere)
     UCameraComponent* OurCameraComponent;
@@ -63,10 +80,10 @@ protected:
     unsigned int CurrentLap;
 
     UPROPERTY(EditAnywhere)
-    int camera_cycle;
+    int CameraCycle;
 
     UPROPERTY(EditAnywhere)
-    int max_cameras = 2;
+    int MaxCameras = 2;
 
     UPROPERTY(EditAnywhere)
     float spawn_offset = 500.0f;
@@ -193,7 +210,7 @@ public:
     void NextPowerupSlot();
 
     UFUNCTION()
-    void OnOverlap(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+    void OnOverlap(class AActor* Actor, class AActor* OtherActor);
 
     UFUNCTION()
     void DropPowerup();
@@ -206,6 +223,12 @@ public:
 
     UFUNCTION()
     void LoadGameDelegateFunction(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData);
+
+    UFUNCTION()
+    int GetSpeedKPH();
+
+    UFUNCTION()
+    FString GetCurrentLapTime();
 
 public://to be changed
     UFUNCTION()

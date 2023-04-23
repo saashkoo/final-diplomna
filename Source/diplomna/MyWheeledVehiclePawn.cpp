@@ -10,7 +10,7 @@ AMyWheeledVehiclePawn::AMyWheeledVehiclePawn(const FObjectInitializer& ObjectIni
     RootComponent = GetMesh();
     BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("VehicleOverlapBox"));
     BoxComp->BodyInstance.SetCollisionProfileName("OverlapAllDynamic");
-    BoxComp->OnComponentBeginOverlap.AddDynamic(this, &AMyWheeledVehiclePawn::OnOverlap);
+    OnActorBeginOverlap.AddDynamic(this, &AMyWheeledVehiclePawn::OnOverlap);
     BoxComp->SetupAttachment(RootComponent);
     bGenerateOverlapEventsDuringLevelStreaming = true;
     Powerups[0] = PowerupsEnum::NONE;
@@ -20,7 +20,7 @@ AMyWheeledVehiclePawn::AMyWheeledVehiclePawn(const FObjectInitializer& ObjectIni
     CurrentLap = 1;
     ResetCheckpoint = nullptr;
     WrongDirectionCheckpoint = nullptr;
-    camera_cycle = 0;
+    CameraCycle = 0;
     ResetLocation = FVector(0.0f, 0.0f, 0.0f);
     ResetRotation = FRotator(0.0f, 0.0f, 0.0f);
     GetVehicleMovementComponent()->SetUseAutomaticGears(true);
@@ -53,7 +53,7 @@ void AMyWheeledVehiclePawn::BeginPlay()
 {
     Super::BeginPlay();
     ResetLocation = GetActorLocation();
-    this->SetLapStartTime(this->GetGameTimeSinceCreation());
+    SetLapStartTime(GetGameTimeSinceCreation());
 }
 
 
@@ -62,8 +62,11 @@ void AMyWheeledVehiclePawn::Tick(float DeltaSeconds)
     Super::Tick(DeltaSeconds);
     if(Hp <= 0)
     {
-        this->Reset();
+        Reset();
     }
+    SpeedDelegate.Execute(GetSpeedKPH());
+    LapTimeDelegate.Execute(GetCurrentLapTime());
+    //UE_LOG(LogTemp, Error, TEXT("a"));
     
 }
 
@@ -91,36 +94,36 @@ void AMyWheeledVehiclePawn::ChangeCam()
     UE_LOG(LogTemp, Error, TEXT("usesautogear: %d"), GetVehicleMovementComponent()->GetUseAutoGears());
     
 
-    if (camera_cycle == 0) {
+    if (CameraCycle == 0) {
         OurCameraComponent->SetRelativeLocation(FVector(200.0f, 0.0f, 100.0f));
         OurCameraComponent->SetRelativeRotation(FRotator(0.0f, 0.0f, 0.0f));
     }
-    if (camera_cycle == 1) {
+    if (CameraCycle == 1) {
         OurCameraComponent->SetRelativeLocation(FVector(-450.0f, 0.0f, 350.0f));
         OurCameraComponent->SetRelativeRotation(FRotator(-15.0f, 0.0f, 0.0f));
     }
-    camera_cycle = camera_cycle + 1;
+    CameraCycle = CameraCycle + 1;
 
-    if (camera_cycle == max_cameras) {
-        camera_cycle = 0;
+    if (CameraCycle == MaxCameras) {
+        CameraCycle = 0;
     }
 }
 
 int AMyWheeledVehiclePawn::GetCamCycle()
 {
-    return camera_cycle;
+    return CameraCycle;
 }
 
 void AMyWheeledVehiclePawn::SetCamCycle(int cycle)
 {
-    while (cycle > max_cameras) {
-        cycle = cycle - max_cameras;
+    while (cycle > MaxCameras) {
+        cycle = cycle - MaxCameras;
     }
 
     while (cycle < 0) {
-        cycle = cycle + max_cameras;
+        cycle = cycle + MaxCameras;
     }
-    camera_cycle = cycle;
+    CameraCycle = cycle;
 }
 
 void AMyWheeledVehiclePawn::SetResetLocation(FVector NewLocation, FRotator NewRotation)
@@ -143,7 +146,7 @@ void AMyWheeledVehiclePawn::Reset()
         this->TeleportTo(ResetLocation, ResetRotation);
         this->GetMovementComponent()->Activate();
         UE_LOG(LogTemp, Error, TEXT("end1 y = %f"), ResetLocation.Y);
-        Hp = MaxHp;
+        SetHp(MaxHp);
         return;
     }
 
@@ -154,12 +157,12 @@ void AMyWheeledVehiclePawn::Reset()
     ResetLocation = ResetLocation - Offset;
     if (bTeleportSucceeded)
     {
-        this->GetMovementComponent()->Deactivate();
-        this->TeleportTo(ResetLocation, ResetRotation);
-        this->GetMovementComponent()->Activate();
+        GetMovementComponent()->Deactivate();
+        TeleportTo(ResetLocation, ResetRotation);
+        GetMovementComponent()->Activate();
         ResetLocation.Y = ResetLocation.Y - spawn_offset;
         UE_LOG(LogTemp, Error, TEXT("end2 y = %f"), ResetLocation.Y);
-        Hp = MaxHp;
+        SetHp(MaxHp);
         return;
     }
     else 
@@ -213,16 +216,18 @@ void AMyWheeledVehiclePawn::SetWrongDirectionCheckpoint(AActor* NewCheckpoint)
 void AMyWheeledVehiclePawn::SetMaxLaps(unsigned int LapCount)
 {
     MaxLaps = LapCount;
+    LapDelegate.Execute(CurrentLap, MaxLaps);
 }
 
 void AMyWheeledVehiclePawn::SetCurrentLap(unsigned int LapCount)
 {
     CurrentLap = LapCount;
+    LapDelegate.Execute(CurrentLap, MaxLaps);
 }
 
 void AMyWheeledVehiclePawn::CompleteLap()
 {
-    float seconds = this->GetGameTimeSinceCreation() - this->GetLapStartTime();
+    float seconds = GetGameTimeSinceCreation() - GetLapStartTime();
     int minutes = 0;
     if (FastestLap == -1)
     {
@@ -238,14 +243,14 @@ void AMyWheeledVehiclePawn::CompleteLap()
         seconds = seconds - 60.f;
     }
      UE_LOG(LogTemp, Warning, TEXT("LapTime: %2d.%2.2f"), minutes, seconds);
-     SetLapStartTime(this->GetGameTimeSinceCreation());
+     SetLapStartTime(GetGameTimeSinceCreation());
     
     if (CurrentLap == MaxLaps) 
     {
         UE_LOG(LogTemp, Error, TEXT("Finished race"));
         if (UFastestTimeSaveGame* LoadedGame = Cast<UFastestTimeSaveGame>(UGameplayStatics::LoadGameFromSlot("defalut", 0)))
         {
-            LoadedGame->Times.Add(FastestLap, this->GetActorNameOrLabel());
+            LoadedGame->Times.Add(FastestLap, GetActorNameOrLabel());
             LoadedGame->Times.KeySort([](float A, float B) { return A < B; });
         }
         else if(UFastestTimeSaveGame* SaveGameInstance = Cast<UFastestTimeSaveGame>(UGameplayStatics::CreateSaveGameObject(UFastestTimeSaveGame::StaticClass())))
@@ -260,6 +265,7 @@ void AMyWheeledVehiclePawn::CompleteLap()
         CastChecked<AGameMode>(GetWorld()->GetAuthGameMode())->EndMatch();
     }
     CurrentLap++;
+    LapDelegate.Execute(CurrentLap, MaxLaps);
 }
 
 unsigned int AMyWheeledVehiclePawn::GetMaxLaps()
@@ -275,6 +281,12 @@ unsigned int AMyWheeledVehiclePawn::GetCurrentLap()
 void AMyWheeledVehiclePawn::SetPowerup(PowerupsEnum Value, int Slot)
 {
     Powerups[Slot] = Value;
+    int PowerupVal = 0;
+    if (Value == PowerupsEnum::BOOST) { PowerupVal = 1; }
+    if (Value == PowerupsEnum::PROJECTILE) { PowerupVal = 2; }
+    if (Value == PowerupsEnum::SHIELD) { PowerupVal = 3; }
+    if (Value == PowerupsEnum::HEAL) { PowerupVal = 4; }
+    PowerupDelegate.Execute(Slot,PowerupVal);
 }
 
 PowerupsEnum AMyWheeledVehiclePawn::GetPowerup(int Slot)
@@ -292,6 +304,7 @@ void AMyWheeledVehiclePawn::SetHp(int Value)
         Value = Value + MaxHp;
     }
     Hp = Value;
+    HpDelegate.Execute(Value, MaxHp);
 }
 
 int AMyWheeledVehiclePawn::GetHp()
@@ -308,25 +321,26 @@ void AMyWheeledVehiclePawn::UseSelectedPowerup()
     if (Powerups[PowerupSlot] == PowerupsEnum::HEAL)
     {
         UseHeal();
-        Powerups[PowerupSlot] = PowerupsEnum::NONE;
+        SetPowerup(PowerupsEnum::NONE, PowerupSlot);
+        //Powerups[PowerupSlot] = PowerupsEnum::NONE;
         return;
     }
     if (Powerups[PowerupSlot] == PowerupsEnum::SHIELD)
     {
         UseShield();
-        Powerups[PowerupSlot] = PowerupsEnum::NONE;
+        SetPowerup(PowerupsEnum::NONE, PowerupSlot);
         return;
     }
     if (Powerups[PowerupSlot] == PowerupsEnum::BOOST)
     {
         UseBoost();
-        Powerups[PowerupSlot] = PowerupsEnum::NONE;
+        SetPowerup(PowerupsEnum::NONE, PowerupSlot);
         return;
     }
     if (Powerups[PowerupSlot] == PowerupsEnum::PROJECTILE)
     {
         UseProjectile();
-        Powerups[PowerupSlot] = PowerupsEnum::NONE;
+        SetPowerup(PowerupsEnum::NONE, PowerupSlot);
         return;
     }
 }
@@ -341,6 +355,7 @@ void AMyWheeledVehiclePawn::SetPowerupSlot(int Value)
         Value = Value + MaxPowerupSlots;
     }
     PowerupSlot = Value;
+    SelectedPowerupDelegate.Execute(Value);
 }
 
 int AMyWheeledVehiclePawn::GetPowerupSlot()
@@ -355,7 +370,7 @@ void AMyWheeledVehiclePawn::SetShield(int Value)
         Value = Value * -1;
     }
     Shield = Value;
-    UE_LOG(LogTemp, Warning, TEXT("Shield: %d"), this->GetShield());
+    UE_LOG(LogTemp, Warning, TEXT("Shield: %d"), GetShield());
 }
 
 int AMyWheeledVehiclePawn::GetShield()
@@ -363,18 +378,18 @@ int AMyWheeledVehiclePawn::GetShield()
     return Shield;
 }
 
-void AMyWheeledVehiclePawn::OnOverlap(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AMyWheeledVehiclePawn::OnOverlap(class AActor* Actor, class AActor* OtherActor)
 {
     UE_LOG(LogTemp, Error, TEXT("hit"));
     if (OtherActor->IsA(ProjectileClass))
     {
         if (Shield < 1)
         {
-            this->Hp = Hp - 1;
+            SetHp(GetHp() - 1);
             UE_LOG(LogTemp, Error, TEXT("by a projectile"));
             if(Hp <= 0)
             {
-                this->Reset();
+                Reset();
             }   
         }
         OtherActor->Destroy();
@@ -386,7 +401,7 @@ void AMyWheeledVehiclePawn::OnOverlap(class UPrimitiveComponent* OverlappedComp,
         {
             if (Powerups[i] == PowerupsEnum::NONE) 
             {
-                Powerups[i] = CastChecked<ASinglePowerupDrop>(OtherActor)->Powerup;
+                SetPowerup(CastChecked<ASinglePowerupDrop>(OtherActor)->Powerup, i);
                 OtherActor->Destroy();
                 return;
             }
@@ -396,16 +411,16 @@ void AMyWheeledVehiclePawn::OnOverlap(class UPrimitiveComponent* OverlappedComp,
 
 void AMyWheeledVehiclePawn::UseHeal() 
 {
-    Hp = MaxHp;
+    SetHp(MaxHp);
     UE_LOG(LogTemp, Warning, TEXT("healed"));
 }
 
 void AMyWheeledVehiclePawn::UseShield()
 {
-    this->SetShield(this->GetShield() + 1);
+    SetShield(GetShield() + 1);
     FTimerHandle Timer;
     FTimerDelegate Delegate;
-    Delegate.BindUObject(this, &AMyWheeledVehiclePawn::SetShield, this->GetShield()-1);
+    Delegate.BindUObject(this, &AMyWheeledVehiclePawn::SetShield, GetShield()-1);
     GetWorld()->GetTimerManager().SetTimer(Timer,Delegate, 5.f, false);
     UE_LOG(LogTemp, Warning, TEXT("Shield started"));
 }
@@ -415,28 +430,28 @@ void AMyWheeledVehiclePawn::UseProjectile()
     FVector SpawnLocation = GetActorLocation();
     FRotator SpawnRotation = GetActorRotation();
     SpawnLocation = SpawnRotation.RotateVector(FVector(400, 0, 50)) + SpawnLocation;//spawns the projectile in front of the car, no matter the rotation
-    GetWorld()->SpawnActor(this->ProjectileClass, &SpawnLocation, &SpawnRotation);
+    GetWorld()->SpawnActor(ProjectileClass, &SpawnLocation, &SpawnRotation);
     return;
 }
 
 void AMyWheeledVehiclePawn::NextPowerupSlot()
 {
-    this->SetPowerupSlot(this->GetPowerupSlot() + 1);
+    SetPowerupSlot(GetPowerupSlot() + 1);
 }
 
 void AMyWheeledVehiclePawn::UseBoost()
 {
-    this->GetMesh()->AddImpulse(this->GetActorRotation().RotateVector(FVector(1000, 0, 0)), "None", true);
+    GetMesh()->AddImpulse(GetActorRotation().RotateVector(FVector(1000, 0, 0)), "None", true);
 }
 
 float AMyWheeledVehiclePawn::GetLapStartTime()
 {
-    return this->LapStartTime;
+    return LapStartTime;
 }
 
 void AMyWheeledVehiclePawn::SetLapStartTime(float Time)
 {
-    this->LapStartTime = Time;
+    LapStartTime = Time;
 }
 
 int AMyWheeledVehiclePawn::GetMaxPowerupSlots()
@@ -457,28 +472,69 @@ void AMyWheeledVehiclePawn::DropPowerup()
         SpawnLocation = SpawnRotation.RotateVector(FVector(-400, 0, 50)) + SpawnLocation;//spawns the powerup behind the car, no matter the rotation
         if (Powerups[PowerupSlot] == PowerupsEnum::HEAL)
         {
-            GetWorld()->SpawnActor(this->PowerupDrops[4], &SpawnLocation, &SpawnRotation);
-            Powerups[PowerupSlot] = PowerupsEnum::NONE;
+            GetWorld()->SpawnActor(PowerupDrops[4], &SpawnLocation, &SpawnRotation);
+            SetPowerup(PowerupsEnum::NONE, PowerupSlot);
             return;
         }
         if (Powerups[PowerupSlot] == PowerupsEnum::SHIELD)
         {
-            GetWorld()->SpawnActor(this->PowerupDrops[3], &SpawnLocation, &SpawnRotation);
-            Powerups[PowerupSlot] = PowerupsEnum::NONE;
+            GetWorld()->SpawnActor(PowerupDrops[3], &SpawnLocation, &SpawnRotation);
+            SetPowerup(PowerupsEnum::NONE, PowerupSlot);
             return;
         }
         if (Powerups[PowerupSlot] == PowerupsEnum::BOOST)
         {
-            GetWorld()->SpawnActor(this->PowerupDrops[1], &SpawnLocation, &SpawnRotation);
-            Powerups[PowerupSlot] = PowerupsEnum::NONE;
+            GetWorld()->SpawnActor(PowerupDrops[1], &SpawnLocation, &SpawnRotation);
+            SetPowerup(PowerupsEnum::NONE, PowerupSlot);
             return;
         }
         if (Powerups[PowerupSlot] == PowerupsEnum::PROJECTILE)
         {
-            GetWorld()->SpawnActor(this->PowerupDrops[2], &SpawnLocation, &SpawnRotation);
-            Powerups[PowerupSlot] = PowerupsEnum::NONE;
+            GetWorld()->SpawnActor(PowerupDrops[2], &SpawnLocation, &SpawnRotation);
+            SetPowerup(PowerupsEnum::NONE, PowerupSlot);
             return;
         }
         
+    }
+}
+
+int AMyWheeledVehiclePawn::GetSpeedKPH()
+{
+    int RetVal = int(GetVehicleMovementComponent()->GetForwardSpeed() * 0.036);
+    if (RetVal)
+    { 
+        if (RetVal < 0)
+        {
+            return -RetVal;
+        }
+        else
+        {
+            return RetVal;
+        }
+        
+    }
+    else
+    {
+        return 0;
+    }
+    
+}
+
+FString AMyWheeledVehiclePawn::GetCurrentLapTime()
+{
+    float Time = GetGameTimeSinceCreation() - GetLapStartTime();
+    int Minutes = 0;
+    while (Time > 60.0) {
+        Minutes++;
+        Time -= 60;
+    }
+    FString StringTime = FString::Printf(TEXT("%2d.%2.2f"), Minutes, Time);
+    if (!StringTime.IsEmpty())
+    {
+        return StringTime;
+    }
+    else
+    {
+        return FString("00.00.00");
     }
 }

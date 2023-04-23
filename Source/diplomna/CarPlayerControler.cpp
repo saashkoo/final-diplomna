@@ -12,6 +12,8 @@ void ACarPlayerControler::OnPossess(APawn* InPawn)
         UE_LOG(LogTemp, Error, TEXT("Wrong Pawn"));
         return;
     }
+    APlayerHUD* SomeHUD = CastChecked<APlayerHUD>(GetHUD());
+
     if (GetLocalPlayer()->GetControllerId() == 0) 
     {
         InputComponent->BindAxis("MySteering", Instanced, &AMyWheeledVehiclePawn::Steer);
@@ -21,11 +23,10 @@ void ACarPlayerControler::OnPossess(APawn* InPawn)
         InputComponent->BindAction("UsePowerup", IE_Pressed, Instanced, &AMyWheeledVehiclePawn::UseSelectedPowerup);
         InputComponent->BindAction("ChangeSlot", IE_Pressed, Instanced, &AMyWheeledVehiclePawn::NextPowerupSlot);
         InputComponent->BindAction("PowerupDrop", IE_Pressed, Instanced, &AMyWheeledVehiclePawn::DropPowerup);
-        
     }
+
     if (GetLocalPlayer()->GetControllerId() == 1)
     {
-        //UE_LOG(LogTemp, Error, TEXT("it works?"));
         InputComponent->BindAxis("P2_Steering", Instanced, &AMyWheeledVehiclePawn::Steer);
         InputComponent->BindAxis("P2_Throttle", Instanced, &AMyWheeledVehiclePawn::Accelerate);
         InputComponent->BindAction("P2_ChangeCam", IE_Pressed, Instanced, &AMyWheeledVehiclePawn::ChangeCam);
@@ -34,5 +35,12 @@ void ACarPlayerControler::OnPossess(APawn* InPawn)
         InputComponent->BindAction("P2_ChangeSlot", IE_Pressed, Instanced, &AMyWheeledVehiclePawn::NextPowerupSlot);
         InputComponent->BindAction("P2_PowerupDrop", IE_Pressed, Instanced, &AMyWheeledVehiclePawn::DropPowerup);
     }
+    Instanced->SpeedDelegate.BindUObject(SomeHUD, &APlayerHUD::UpdateSpeed);
+    Instanced->SelectedPowerupDelegate.BindUObject(SomeHUD, &APlayerHUD::UpdateSelectedPowerup);
+    Instanced->LapTimeDelegate.BindUObject(SomeHUD, &APlayerHUD::UpdateLapTime);
+    Instanced->HpDelegate.BindUObject(SomeHUD, &APlayerHUD::UpdateHealthBar);
+    Instanced->PowerupDelegate.BindUObject(SomeHUD, &APlayerHUD::UpdatePowerups);
+    Instanced->LapDelegate.BindUObject(SomeHUD, &APlayerHUD::UpdateLaps);
+    
 
 }

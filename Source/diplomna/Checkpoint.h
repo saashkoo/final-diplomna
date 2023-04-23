@@ -30,6 +30,6 @@ public:
 	class UBoxComponent* BoxComp;
 
 	UFUNCTION()
-	virtual void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	virtual void OnOverlapBegin(class AActor* Actor, class AActor* OtherActor);
 
 };

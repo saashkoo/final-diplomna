@@ -10,7 +10,7 @@ APowerupSpawner::APowerupSpawner()
 	PrimaryActorTick.bCanEverTick = true;
 	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("Spawner"));
 	BoxComp->BodyInstance.SetCollisionProfileName("OverlapAll");
-	BoxComp->OnComponentBeginOverlap.AddDynamic(this, &APowerupSpawner::OnOverlapBegin);
+	OnActorBeginOverlap.AddDynamic(this, &APowerupSpawner::OnOverlapBegin);
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->BodyInstance.SetCollisionProfileName("NoCollision");
 	RootComponent = BoxComp;
@@ -32,11 +32,11 @@ void APowerupSpawner::Tick(float DeltaTime)
 
 }
 
-void APowerupSpawner::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void APowerupSpawner::OnOverlapBegin(class AActor* Actor, class AActor* OtherActor)
 {
 
 	if (bCanBeCollected) {
-		if ((OtherComp != NULL) && OtherActor->ActorHasTag(FName("Player")))
+		if (OtherActor->ActorHasTag(FName("Player")))
 		{
 			AMyWheeledVehiclePawn* Player = CastChecked<AMyWheeledVehiclePawn>(OtherActor);
 			for (int i = 0; i < Player->GetMaxPowerupSlots(); i++)
