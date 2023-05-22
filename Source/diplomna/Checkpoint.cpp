@@ -6,8 +6,6 @@
 // Sets default values
 ACheckpoint::ACheckpoint()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
 	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
 	BoxComp->BodyInstance.SetCollisionProfileName("OverlapAll");
 	OnActorBeginOverlap.AddDynamic(this, &ACheckpoint::OnOverlapBegin);
@@ -20,13 +18,6 @@ void ACheckpoint::BeginPlay()
 {
 	Super::BeginPlay();
 	
-}
-
-// Called every frame
-void ACheckpoint::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 
 

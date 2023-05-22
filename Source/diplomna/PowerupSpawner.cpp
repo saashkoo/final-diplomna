@@ -6,8 +6,7 @@
 // Sets default values
 APowerupSpawner::APowerupSpawner()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+
 	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("Spawner"));
 	BoxComp->BodyInstance.SetCollisionProfileName("OverlapAll");
 	OnActorBeginOverlap.AddDynamic(this, &APowerupSpawner::OnOverlapBegin);
@@ -25,13 +24,6 @@ void APowerupSpawner::BeginPlay()
 	
 }
 
-// Called every frame
-void APowerupSpawner::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
 void APowerupSpawner::OnOverlapBegin(class AActor* Actor, class AActor* OtherActor)
 {
 
@@ -39,11 +31,11 @@ void APowerupSpawner::OnOverlapBegin(class AActor* Actor, class AActor* OtherAct
 		if (OtherActor->ActorHasTag(FName("Player")))
 		{
 			AMyWheeledVehiclePawn* Player = CastChecked<AMyWheeledVehiclePawn>(OtherActor);
-			for (int i = 0; i < Player->GetMaxPowerupSlots(); i++)
+			for (int I = 0; I < Player->GetMaxPowerupSlots(); I++)
 			{
-				if (Player->GetPowerup(i) == PowerupsEnum::NONE)
+				if (Player->GetPowerup(I) == PowerupsEnum::NONE)
 				{
-					Player->SetPowerup(Powerup, i);
+					Player->SetPowerup(Powerup, I);
 					bCanBeCollected = false;
 					FTimerHandle Handle;
 					GetWorld()->GetTimerManager().SetTimer(Handle, this, &APowerupSpawner::Respawn, 2.f, false);

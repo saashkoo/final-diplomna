@@ -17,6 +17,9 @@
 #include "SinglePowerupDrop.h"
 #include "Containers/Array.h"
 #include "GameFramework/GameModeBase.h"
+#include "Templates/Tuple.h"
+#include "Templates/Tuple.h"
+#include "Containers/Map.h"
 
 #include "MyWheeledVehiclePawn.generated.h"
 
@@ -54,6 +57,9 @@ public:
     UPROPERTY(EditAnywhere)
     UCameraComponent* OurCameraComponent;
 
+    UPROPERTY()
+        UCustomVehicleMovementComponent* CastMovementComp = nullptr;
+
     UPROPERTY(EditAnywhere)
     USpringArmComponent* SpringArmComp;
 
@@ -65,6 +71,12 @@ public:
 
     UPROPERTY(EditAnywhere)
     TArray<TSubclassOf<ASinglePowerupDrop>> PowerupDrops;
+
+    UPROPERTY(EditAnywhere)
+    bool HasWon = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TMap<FVector, FRotator> Cameras;
 
 protected:
     // Called when the game starts or when spawned
@@ -86,7 +98,7 @@ protected:
     int MaxCameras = 2;
 
     UPROPERTY(EditAnywhere)
-    float spawn_offset = 500.0f;
+    float SpawnOffset = 500.0f;
 
     UPROPERTY(EditAnywhere)
     FVector ResetLocation;
@@ -141,7 +153,10 @@ public:
     int GetCamCycle();
     
     UFUNCTION()
-    void SetCamCycle(int cycle);
+    float GetFastestTime();
+
+    UFUNCTION()
+    void SetCamCycle(int Cycle);
     
     UFUNCTION()
     void SetResetLocation(FVector NewLocation, FRotator NewRotation);

@@ -7,6 +7,9 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h" 
 #include "Components/StaticMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
+
 
 #include "Projectile.generated.h"
 
@@ -28,13 +31,17 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UStaticMeshComponent* Mesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<TSubclassOf<AActor>> IgnoredClasses;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USoundBase* HitSound;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
 	void OnOverlapBegin(class AActor* Actor, class AActor* OtherActor);

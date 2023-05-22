@@ -5,7 +5,6 @@
 
 AFinalCheckpoint::AFinalCheckpoint()
 {
-	PrimaryActorTick.bCanEverTick = true;
 	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("FinalBoxComp"));
 	BoxComp->BodyInstance.SetCollisionProfileName("OverlapAll");
 	//OnActorBeginOverlap.AddDynamic(this, &AFinalCheckpoint::OnOverlapBegin);

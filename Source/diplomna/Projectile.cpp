@@ -6,8 +6,6 @@
 // Sets default values
 AProjectile::AProjectile()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
 	MovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MovementComponent"));
 	MovementComponent->MaxSpeed = 1001.f;
 	MovementComponent->InitialSpeed = 1000.f;
@@ -28,14 +26,15 @@ void AProjectile::BeginPlay()
 	
 }
 
-// Called every frame
-void AProjectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
 void AProjectile::OnOverlapBegin(class AActor* Actor, class AActor* OtherActor)
 {
+	for (auto It = IgnoredClasses.CreateConstIterator(); It; ++It)
+	{
+		if(OtherActor->IsA(*It))
+		{
+			return;
+		}
+	}
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, GetActorLocation());
 	this->Destroy();
 }

@@ -14,7 +14,7 @@ void APlayerHUD::BeginPlay()
 
 	if (WidgetClass != nullptr )
 	{
-		Widget = CreateWidget<UTwoPlayerWidget>(GetWorld(), WidgetClass);
+		Widget = CreateWidget<UPlayerWidget>(GetWorld(), WidgetClass);
 		Widget->SetOwner(GetOwningPlayerController()->GetLocalPlayer()->GetControllerId());
 			Widget->AddToPlayerScreen();
 
@@ -25,11 +25,6 @@ void APlayerHUD::BeginPlay()
 void APlayerHUD::DrawHUD()
 {
 	Super::DrawHUD();
-}
-
-void APlayerHUD::Tick(float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
 }
 
 void APlayerHUD::UpdateSpeed(int Speed)

@@ -10,9 +10,9 @@ bool UMyLocalMPGameViewportClient::InputKey(const FInputKeyEventArgs& EventArgs)
     UEngine* const Engine = GetOuterUEngine();
     int32 const NumPlayers = Engine ? Engine->GetNumGamePlayers(this) : 0;
     bool bRetVal = false;
-    for (int32 i = 0; i < NumPlayers; i++)
+    for (int32 I = 0; I < NumPlayers; I++)
     {
-        FInputKeyEventArgs arg = FInputKeyEventArgs(EventArgs.Viewport, i, EventArgs.Key, EventArgs.Event, EventArgs.AmountDepressed, EventArgs.bIsTouchEvent);
+        FInputKeyEventArgs arg = FInputKeyEventArgs(EventArgs.Viewport, I, EventArgs.Key, EventArgs.Event, EventArgs.AmountDepressed, EventArgs.bIsTouchEvent);
         bRetVal = Super::InputKey(arg);
         bRetVal;
     }
@@ -26,9 +26,9 @@ bool UMyLocalMPGameViewportClient::InputAxis(FViewport* InputViewport, int32 Con
         UEngine* const Engine = GetOuterUEngine();
         int32 const NumPlayers = Engine ? Engine->GetNumGamePlayers(this) : 0;
         bool bRetVal = false;
-        for (int32 i = 0; i < NumPlayers; i++)
+        for (int32 I = 0; I < NumPlayers; I++)
         {
-            bRetVal = Super::InputAxis(InputViewport, i, Key, Delta, DeltaTime, NumSamples, bGamepad);
+            bRetVal = Super::InputAxis(InputViewport, I, Key, Delta, DeltaTime, NumSamples, bGamepad);
             bRetVal;
         }
 

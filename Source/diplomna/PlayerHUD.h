@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
-#include "TwoPlayerWidget.h"
+#include "PlayerWidget.h"
 #include "Components/WidgetComponent.h"
 
 #include "PlayerHUD.generated.h"
@@ -25,13 +25,11 @@ public:
 	TSubclassOf<UUserWidget> WidgetClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UTwoPlayerWidget* Widget;
+	UPlayerWidget* Widget;
 
 	virtual void BeginPlay() override;
 
 	virtual void DrawHUD() override;
-
-	virtual void Tick(float DeltaSeconds) override;
 
 	UFUNCTION()
 	void UpdateSpeed(int Speed);

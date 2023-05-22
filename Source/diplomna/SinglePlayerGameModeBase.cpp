@@ -18,6 +18,9 @@ void ASinglePlayerGameModeBase::StartPlay() {
     AFinalCheckpoint* FinishLine = World->SpawnActor<AFinalCheckpoint>(FVector(Player1Start->GetActorLocation().X - 1500, Player1Start->GetActorLocation().Y - 500, Player1Start->GetActorLocation().Z), Player1Start->GetActorRotation());
     FinishLine->BoxComp->SetBoxExtent(FVector(32, 2000, 2000));
 
+    OptionsString.RemoveAt(0, 1, true);
+    SetLapCount(FCString::Atoi(*(OptionsString)));
+
     if (Player1->GetController() == nullptr)
     {
         UE_LOG(LogTemp, Error, TEXT("Player 1 not initialized"));
@@ -57,18 +60,18 @@ void ASinglePlayerGameModeBase::SetTimePerLap(float Time)
 void ASinglePlayerGameModeBase::EndMatch()
 {
     Super::EndMatch();
-    if (UGameplayStatics::GetPlayerController(GetWorld(), 1)->GetGameTimeSinceCreation() < GetTimePerLap()) 
-    {
-        UE_LOG(LogTemp, Error, TEXT("You Won!"));
-    }
-    else 
-    {
-        UE_LOG(LogTemp, Error, TEXT("You Lost!"));
-    }
     StartToLeaveMap();
-    for (int i = 0; i < GetNumPlayers(); i++)
-    {
-        UKismetSystemLibrary::QuitGame(GetWorld(), UGameplayStatics::GetPlayerController(GetWorld(), i), EQuitPreference::Quit, false);
-    }
+    FString Options = UGameplayStatics::GetCurrentLevelName(GetWorld(), true);
+    Options.RemoveFromEnd(FString("1p"), ESearchCase::CaseSensitive);
+    UE_LOG(LogTemp, Warning, TEXT("Gamemode map name: %s"), *Options);
+    Options.Append(" ");
+    AMyWheeledVehiclePawn* Player1 = Cast<AMyWheeledVehiclePawn>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+    Options.Append(FString::SanitizeFloat(Player1->GetFastestTime()));
+    Options.Append(" ");
+    Options.Append("1");
+    Options.Append(" ");
+    Options.Append("1");
+    UGameplayStatics::RemovePlayer(UGameplayStatics::GetPlayerController(GetWorld(), 1), true);
+    UGameplayStatics::OpenLevel(GetWorld(), FName("EndGameLevel"), true, Options);
     //a
 }

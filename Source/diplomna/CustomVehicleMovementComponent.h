@@ -19,4 +19,7 @@ public:
 
 	UFUNCTION()
 	void SetForwardSpeed(float Speed);
+
+	UFUNCTION()
+		int GetSpeedKPH();
 };
